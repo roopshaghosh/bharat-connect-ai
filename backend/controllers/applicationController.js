@@ -3,6 +3,7 @@ const SkillOpportunity = require('../models/SkillOpportunity');
 const Conversation = require('../models/Conversation');
 const Notification = require('../models/Notification');
 const { emitToUser } = require('../config/socket');
+const { checkAndAwardBadges } = require('../config/badgeAwarder');
 
 // @desc    Apply for a skill opportunity
 // @route   POST /api/opportunities/:id/apply
@@ -47,6 +48,9 @@ const applyOpportunity = async (req, res) => {
       applicant: req.user.id,
       status: 'pending',
     });
+
+    // Check badges for the applicant
+    await checkAndAwardBadges(req.user.id);
 
     res.status(201).json({
       success: true,
@@ -169,6 +173,9 @@ const updateApplicationStatus = async (req, res) => {
 
         // Real-time notification emit
         emitToUser(application.applicant, 'notification', notification);
+
+        // Check badges for the applicant (First Contribution check)
+        await checkAndAwardBadges(application.applicant);
       } catch (triggerError) {
         console.error('Trigger Application Accepted Action Error:', triggerError);
       }

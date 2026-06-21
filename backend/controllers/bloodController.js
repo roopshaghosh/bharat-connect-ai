@@ -3,6 +3,7 @@ const BloodRequest = require('../models/BloodRequest');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
 const { emitToUser } = require('../config/socket');
+const { checkAndAwardBadges } = require('../config/badgeAwarder');
 
 // @desc    Register or update availability as a blood donor
 // @route   POST /api/blood/donor
@@ -224,6 +225,9 @@ const respondToRequest = async (req, res) => {
       donorUser.impactScore = (donorUser.impactScore || 0) + 30;
       await donorUser.save();
     }
+
+    // Check badges for the donor
+    await checkAndAwardBadges(req.user.id);
 
     res.status(200).json({
       success: true,

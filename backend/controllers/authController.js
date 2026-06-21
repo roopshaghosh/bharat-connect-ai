@@ -4,6 +4,7 @@ const User = require('../models/User');
 const Application = require('../models/Application');
 const SkillOpportunity = require('../models/SkillOpportunity');
 const BloodRequest = require('../models/BloodRequest');
+const UserBadge = require('../models/UserBadge');
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -225,9 +226,21 @@ const googleLogin = async (req, res) => {
 const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
+    
+    // Fetch and populate user badges
+    const userBadges = await UserBadge.find({ user: req.user.id }).populate('badge');
+    const badgeList = userBadges.filter(ub => ub.badge).map(ub => ({
+      title: ub.badge.name,
+      description: ub.badge.description,
+      icon: ub.badge.icon || '🏆'
+    }));
+
     res.status(200).json({
       success: true,
-      data: user,
+      data: {
+        ...user.toObject(),
+        badges: badgeList
+      },
     });
   } catch (error) {
     console.error('Get Profile Error:', error);

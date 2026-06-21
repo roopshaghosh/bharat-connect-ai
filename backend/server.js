@@ -43,9 +43,14 @@ const chatRoutes =
 const notificationRoutes =
   require("./routes/notificationRoutes");
 
+const { initializeBadges } =
+  require("./config/badgeAwarder");
+
 dotenv.config();
 
-connectDB();
+connectDB().then(() => {
+  initializeBadges();
+});
 
 const app =
   express();

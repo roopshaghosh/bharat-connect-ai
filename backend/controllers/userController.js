@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const UserBadge = require('../models/UserBadge');
 
 // @desc    Get current user profile
 // @route   GET /api/users/profile
@@ -14,9 +15,20 @@ const getUserProfile = async (req, res) => {
       });
     }
 
+    // Fetch and populate user badges
+    const userBadges = await UserBadge.find({ user: req.user.id }).populate('badge');
+    const badgeList = userBadges.filter(ub => ub.badge).map(ub => ({
+      title: ub.badge.name,
+      description: ub.badge.description,
+      icon: ub.badge.icon || '🏆'
+    }));
+
     res.status(200).json({
       success: true,
-      data: user,
+      data: {
+        ...user.toObject(),
+        badges: badgeList
+      },
     });
   } catch (error) {
     console.error('Get User Profile Error:', error);
@@ -64,6 +76,14 @@ const updateUserProfile = async (req, res) => {
 
     const updatedUser = await user.save();
 
+    // Fetch and populate user badges
+    const userBadges = await UserBadge.find({ user: req.user.id }).populate('badge');
+    const badgeList = userBadges.filter(ub => ub.badge).map(ub => ({
+      title: ub.badge.name,
+      description: ub.badge.description,
+      icon: ub.badge.icon || '🏆'
+    }));
+
     res.status(200).json({
       success: true,
       data: {
@@ -80,6 +100,7 @@ const updateUserProfile = async (req, res) => {
         availability: updatedUser.availability,
         createdAt: updatedUser.createdAt,
         updatedAt: updatedUser.updatedAt,
+        badges: badgeList,
       },
     });
   } catch (error) {
