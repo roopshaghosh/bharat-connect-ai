@@ -7,8 +7,14 @@ const dotenv =
 const cors =
   require("cors");
 
+const http =
+  require("http");
+
 const connectDB =
   require("./config/db");
+
+const { initSocket } =
+  require("./config/socket");
 
 const authRoutes =
   require("./routes/authRoutes");
@@ -31,12 +37,23 @@ const aiRoutes =
 const buddyRoutes =
   require("./routes/buddyRoutes");
 
+const chatRoutes =
+  require("./routes/chatRoutes");
+
+const notificationRoutes =
+  require("./routes/notificationRoutes");
+
 dotenv.config();
 
 connectDB();
 
 const app =
   express();
+
+const server =
+  http.createServer(app);
+
+initSocket(server);
 
 app.use(cors());
 
@@ -58,6 +75,10 @@ app.use("/api/ai", aiRoutes);
 
 app.use("/api/buddy", buddyRoutes);
 
+app.use("/api/chat", chatRoutes);
+
+app.use("/api/notifications", notificationRoutes);
+
 app.get(
   "/",
   (req, res) => {
@@ -71,7 +92,7 @@ const PORT =
   process.env.PORT ||
   5000;
 
-app.listen(
+server.listen(
   PORT,
   () => {
     console.log(

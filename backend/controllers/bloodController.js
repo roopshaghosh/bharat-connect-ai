@@ -1,6 +1,8 @@
 const BloodDonor = require('../models/BloodDonor');
 const BloodRequest = require('../models/BloodRequest');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
+const { emitToUser } = require('../config/socket');
 
 // @desc    Register or update availability as a blood donor
 // @route   POST /api/blood/donor
@@ -99,6 +101,29 @@ const createRequest = async (req, res) => {
     const populatedRequest = await BloodRequest.findById(bloodRequest._id)
       .populate('postedBy', 'fullname email location bloodGroup avatar')
       .populate('requester', 'fullname email location bloodGroup avatar');
+
+    // Trigger notifications for nearby available donors in the same city
+    try {
+      const nearbyDonors = await BloodDonor.find({
+        city: { $regex: new RegExp(`^${requestCity}$`, 'i') },
+        available: true,
+        user: { $ne: req.user.id }
+      });
+
+      for (const donor of nearbyDonors) {
+        const notification = await Notification.create({
+          user: donor.user,
+          title: 'Emergency Blood Request Nearby 🚨',
+          message: `A critical blood request for group ${bloodGroup} is needed at ${hospital} in ${requestCity}. Please help if you can!`,
+          read: false
+        });
+
+        // Real-time emit to donor
+        emitToUser(donor.user, 'notification', notification);
+      }
+    } catch (triggerError) {
+      console.error('Trigger Blood Request Nearby Notification Error:', triggerError);
+    }
 
     res.status(201).json({
       success: true,

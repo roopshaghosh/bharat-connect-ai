@@ -1,5 +1,8 @@
 const Application = require('../models/Application');
 const SkillOpportunity = require('../models/SkillOpportunity');
+const Conversation = require('../models/Conversation');
+const Notification = require('../models/Notification');
+const { emitToUser } = require('../config/socket');
 
 // @desc    Apply for a skill opportunity
 // @route   POST /api/opportunities/:id/apply
@@ -140,6 +143,36 @@ const updateApplicationStatus = async (req, res) => {
 
     application.status = status;
     const updatedApplication = await application.save();
+
+    // Trigger conversation creation and notification if accepted
+    if (status === 'accepted') {
+      try {
+        // Create/Find Conversation between NGO and Volunteer
+        let conversation = await Conversation.findOne({
+          participants: { $all: [opportunity.ngo, application.applicant] }
+        });
+
+        if (!conversation) {
+          conversation = await Conversation.create({
+            participants: [opportunity.ngo, application.applicant]
+          });
+          console.log(`Created Conversation ${conversation._id} between NGO ${opportunity.ngo} and Volunteer ${application.applicant}`);
+        }
+
+        // Create Alert Notification for volunteer
+        const notification = await Notification.create({
+          user: application.applicant,
+          title: 'Application Accepted! 🎉',
+          message: `Your application for "${opportunity.title}" has been accepted by ${req.user.fullname || 'the host NGO'}.`,
+          read: false
+        });
+
+        // Real-time notification emit
+        emitToUser(application.applicant, 'notification', notification);
+      } catch (triggerError) {
+        console.error('Trigger Application Accepted Action Error:', triggerError);
+      }
+    }
 
     res.status(200).json({
       success: true,
