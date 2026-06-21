@@ -16,6 +16,12 @@ const authRoutes =
 const userRoutes =
   require("./routes/userRoutes");
 
+const opportunityRoutes =
+  require("./routes/opportunityRoutes");
+
+const applicationRoutes =
+  require("./routes/applicationRoutes");
+
 dotenv.config();
 
 connectDB();
@@ -30,6 +36,10 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 
 app.use("/api/users", userRoutes);
+
+app.use("/api/opportunities", opportunityRoutes);
+
+app.use("/api/applications", applicationRoutes);
 
 app.get(
   "/",
