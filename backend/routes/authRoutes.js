@@ -4,6 +4,7 @@ const {
   login,
   googleLogin,
   getMe,
+  getImpactStats,
 } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -16,5 +17,6 @@ router.post('/google', googleLogin);
 
 // Protected routes
 router.get('/me', protect, getMe);
+router.get('/impact', protect, getImpactStats);
 
 module.exports = router;

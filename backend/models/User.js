@@ -70,6 +70,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    isBloodDonor: {
+      type: Boolean,
+      default: false,
+    },
+    impactScore: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,

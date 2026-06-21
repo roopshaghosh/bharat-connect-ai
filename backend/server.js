@@ -22,6 +22,9 @@ const opportunityRoutes =
 const applicationRoutes =
   require("./routes/applicationRoutes");
 
+const bloodRoutes =
+  require("./routes/bloodRoutes");
+
 dotenv.config();
 
 connectDB();
@@ -40,6 +43,10 @@ app.use("/api/users", userRoutes);
 app.use("/api/opportunities", opportunityRoutes);
 
 app.use("/api/applications", applicationRoutes);
+
+app.use("/api/blood", bloodRoutes);
+
+app.use("/api/blood-donation", bloodRoutes);
 
 app.get(
   "/",

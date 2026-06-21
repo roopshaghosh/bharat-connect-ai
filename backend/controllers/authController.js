@@ -1,6 +1,9 @@
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
+const Application = require('../models/Application');
+const SkillOpportunity = require('../models/SkillOpportunity');
+const BloodRequest = require('../models/BloodRequest');
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -235,9 +238,67 @@ const getMe = async (req, res) => {
   }
 };
 
+// @desc    Get impact stats for current user
+// @route   GET /api/auth/impact
+// @access  Private
+const getImpactStats = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const isOrg = req.user.role === 'NGO';
+
+    let stats = {
+      impactScore: req.user.impactScore || 0,
+      volunteerHoursEstimated: 0,
+      totalApplications: 0,
+      approvedApplications: 0
+    };
+
+    if (isOrg) {
+      // NGO: stats for opportunities they created
+      const opportunities = await SkillOpportunity.find({ ngo: userId });
+      const oppIds = opportunities.map(o => o._id);
+      
+      stats.totalApplications = await Application.countDocuments({ opportunity: { $in: oppIds } });
+      stats.approvedApplications = await Application.countDocuments({ opportunity: { $in: oppIds }, status: 'accepted' });
+      stats.volunteerHoursEstimated = stats.approvedApplications * 4; // estimate 4 hours per approval
+    } else {
+      // Volunteer: stats for applications they submitted
+      stats.totalApplications = await Application.countDocuments({ applicant: userId });
+      stats.approvedApplications = await Application.countDocuments({ applicant: userId, status: 'accepted' });
+      stats.volunteerHoursEstimated = stats.approvedApplications * 4;
+    }
+
+    // Add points for blood responses if any
+    const bloodResponsesCount = await BloodRequest.countDocuments({
+      'responses.donor': userId
+    });
+    
+    // Dynamic impactScore = (approvedApplications * 50) + (bloodResponsesCount * 30)
+    stats.impactScore = (stats.approvedApplications * 50) + (bloodResponsesCount * 30);
+
+    // Persist updated impactScore to user object
+    if (req.user.impactScore !== stats.impactScore) {
+      req.user.impactScore = stats.impactScore;
+      await req.user.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    console.error('Get Impact Stats Error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
   googleLogin,
   getMe,
+  getImpactStats,
 };
