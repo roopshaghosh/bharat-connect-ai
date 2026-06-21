@@ -28,6 +28,9 @@ const bloodRoutes =
 const aiRoutes =
   require("./routes/aiRoutes");
 
+const buddyRoutes =
+  require("./routes/buddyRoutes");
+
 dotenv.config();
 
 connectDB();
@@ -52,6 +55,8 @@ app.use("/api/blood", bloodRoutes);
 app.use("/api/blood-donation", bloodRoutes);
 
 app.use("/api/ai", aiRoutes);
+
+app.use("/api/buddy", buddyRoutes);
 
 app.get(
   "/",
