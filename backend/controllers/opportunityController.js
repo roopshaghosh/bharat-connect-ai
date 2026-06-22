@@ -5,7 +5,7 @@ const SkillOpportunity = require('../models/SkillOpportunity');
 // @access  Private (NGO only)
 const createOpportunity = async (req, res) => {
   try {
-    const { title, description, category, skillsRequired, location, deadline } = req.body;
+    const { title, description, category, skillsRequired, location, deadline, date } = req.body;
 
     const opportunity = await SkillOpportunity.create({
       title,
@@ -16,7 +16,7 @@ const createOpportunity = async (req, res) => {
         : skillsRequired ? skillsRequired.split(',').map(s => s.trim()).filter(Boolean) : [],
       ngo: req.user.id,
       location,
-      deadline,
+      deadline: deadline || date,
     });
 
     res.status(201).json({
@@ -103,13 +103,15 @@ const updateOpportunity = async (req, res) => {
       });
     }
 
-    const { title, description, category, skillsRequired, location, deadline } = req.body;
+    const { title, description, category, skillsRequired, location, deadline, date } = req.body;
 
     if (title !== undefined) opportunity.title = title;
     if (description !== undefined) opportunity.description = description;
     if (category !== undefined) opportunity.category = category;
     if (location !== undefined) opportunity.location = location;
-    if (deadline !== undefined) opportunity.deadline = deadline;
+    
+    const actualDeadline = deadline !== undefined ? deadline : date;
+    if (actualDeadline !== undefined) opportunity.deadline = actualDeadline;
     if (skillsRequired !== undefined) {
       opportunity.skillsRequired = Array.isArray(skillsRequired)
         ? skillsRequired
