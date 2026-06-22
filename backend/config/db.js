@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const { MongoMemoryServer } = require("mongodb-memory-server");
 
 const connectDB = async () => {
   const uri = process.env.MONGO_URI || process.env.MONGODB_URI;
@@ -13,6 +12,7 @@ const connectDB = async () => {
   } catch (error) {
     console.log(`Failed to connect to primary MongoDB (${error.message}). Spinning up an in-memory MongoDB server fallback...`);
     try {
+      const { MongoMemoryServer } = require("mongodb-memory-server");
       const mongoServer = await MongoMemoryServer.create();
       const mongoUri = mongoServer.getUri();
       console.log(`In-memory MongoDB server started at: ${mongoUri}`);
