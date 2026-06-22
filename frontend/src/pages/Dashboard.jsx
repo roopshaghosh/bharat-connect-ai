@@ -77,7 +77,7 @@ const Dashboard = () => {
   };
 
   const fetchAIRecommendations = async () => {
-    if (!user || user.skills.length === 0) return;
+    if (!user || !user.skills || user.skills.length === 0) return;
     setAiLoading(true);
     try {
       const res = await aiService.getRecommendations();
@@ -178,12 +178,12 @@ const Dashboard = () => {
                   <BrainCircuit className="w-5 h-5 animate-pulse" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white leading-tight">Gemini AI Personalized Matches</h3>
+                  <h3 className="text-lg font-bold text-white leading-tight">AI Personalized Matches</h3>
                   <p className="text-xs text-slate-400 mt-0.5">Semantic matching analyzing your skills, location, and blood donor tags.</p>
                 </div>
               </div>
 
-              {user?.skills.length > 0 && (
+              {user?.skills && user.skills.length > 0 && (
                 <button
                   onClick={fetchAIRecommendations}
                   disabled={aiLoading}
@@ -195,12 +195,12 @@ const Dashboard = () => {
               )}
             </div>
 
-            {user?.skills.length === 0 ? (
+            {(!user?.skills || user.skills.length === 0) ? (
               <div className="flex flex-col items-center justify-center text-center p-8 bg-slate-900/40 rounded-2xl border border-dashed border-slate-800">
                 <ShieldAlert className="w-8 h-8 text-yellow-400 mb-3" />
                 <h5 className="font-bold text-white text-sm mb-1">Set Up Your Profile Tags</h5>
                 <p className="text-xs text-slate-400 max-w-sm mb-4 leading-relaxed">
-                  We need your skills, interests, and location tags to run the Gemini AI Matcher.
+                  We need your skills, interests, and location tags to run the AI Matcher.
                 </p>
                 <button
                   onClick={() => navigate('/profile')}

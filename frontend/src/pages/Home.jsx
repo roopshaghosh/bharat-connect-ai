@@ -47,7 +47,7 @@ const Home = () => {
             <div className="relative border-l-2 border-indigo-500/30 pl-5 ml-2.5 space-y-5">
               {[
                 { title: 'Create Profile', desc: 'Set your skills (e.g. Teaching, React.js), location, and availability tags.' },
-                { title: 'AI Semantic Analysis', desc: 'Gemini compares your tags with active NGO openings and emergency blood requests.' },
+                { title: 'AI Semantic Analysis', desc: 'The AI compares your tags with active NGO openings and emergency blood requests.' },
                 { title: 'Personalized Matching', desc: 'Instantly view a curated dashboard with match percentages and reasons.' }
               ].map((step, idx) => (
                 <div key={idx} className="relative">

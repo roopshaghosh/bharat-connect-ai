@@ -89,13 +89,30 @@ const getOpportunityApplicants = async (req, res) => {
     }
 
     const applicants = await Application.find({ opportunity: opportunityId })
-      .populate('applicant', 'fullname email location bloodGroup bio skills interests availability avatar')
+      .populate('applicant', 'fullname email location bloodGroup bio skills interests availability avatar impactScore')
       .sort({ createdAt: -1 });
+
+    const formattedApplicants = applicants.map(app => {
+      const appObj = app.toObject();
+      if (appObj.applicant) {
+        appObj.volunteer = {
+          _id: appObj.applicant._id,
+          name: appObj.applicant.fullname,
+          email: appObj.applicant.email,
+          impactScore: appObj.applicant.impactScore || 0,
+          avatar: appObj.applicant.avatar
+        };
+      }
+      if (appObj.status === 'accepted') {
+        appObj.status = 'approved';
+      }
+      return appObj;
+    });
 
     res.status(200).json({
       success: true,
-      count: applicants.length,
-      data: applicants,
+      count: formattedApplicants.length,
+      data: formattedApplicants,
     });
   } catch (error) {
     console.error('Get Applicants Error:', error);
@@ -111,7 +128,12 @@ const getOpportunityApplicants = async (req, res) => {
 // @access  Private (NGO owner only)
 const updateApplicationStatus = async (req, res) => {
   try {
-    const { status } = req.body;
+    let { status } = req.body;
+
+    // Map frontend 'approved' to backend 'accepted'
+    if (status === 'approved') {
+      status = 'accepted';
+    }
 
     if (!status || !['accepted', 'rejected'].includes(status)) {
       return res.status(400).json({
@@ -181,12 +203,73 @@ const updateApplicationStatus = async (req, res) => {
       }
     }
 
+    const appObj = updatedApplication.toObject();
+    if (appObj.status === 'accepted') {
+      appObj.status = 'approved';
+    }
+
     res.status(200).json({
       success: true,
-      data: updatedApplication,
+      data: appObj,
     });
   } catch (error) {
     console.error('Update Application Status Error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// @desc    Get volunteer applications (for volunteer applicant or NGO)
+// @route   GET /api/applications or /api/volunteer/applications
+// @access  Private
+const getApplications = async (req, res) => {
+  try {
+    let applications;
+
+    if (req.user.role === 'NGO') {
+      const opportunities = await SkillOpportunity.find({ ngo: req.user.id });
+      const oppIds = opportunities.map(o => o._id);
+      
+      applications = await Application.find({ opportunity: { $in: oppIds } })
+        .populate('opportunity')
+        .populate('applicant', 'fullname email location bloodGroup bio skills interests availability avatar impactScore')
+        .sort({ createdAt: -1 });
+    } else {
+      applications = await Application.find({ applicant: req.user.id })
+        .populate('opportunity')
+        .populate('applicant', 'fullname email location bloodGroup bio skills interests availability avatar impactScore')
+        .sort({ createdAt: -1 });
+    }
+
+    const formattedApplications = applications.map(app => {
+      const appObj = app.toObject();
+      if (appObj.applicant) {
+        appObj.volunteer = {
+          _id: appObj.applicant._id,
+          name: appObj.applicant.fullname,
+          email: appObj.applicant.email,
+          impactScore: appObj.applicant.impactScore || 0,
+          avatar: appObj.applicant.avatar
+        };
+      }
+      if (appObj.opportunity && !appObj.opportunity.date) {
+        appObj.opportunity.date = appObj.opportunity.deadline;
+      }
+      if (appObj.status === 'accepted') {
+        appObj.status = 'approved';
+      }
+      return appObj;
+    });
+
+    res.status(200).json({
+      success: true,
+      count: formattedApplications.length,
+      data: formattedApplications,
+    });
+  } catch (error) {
+    console.error('Get Applications Error:', error);
     res.status(500).json({
       success: false,
       message: error.message,
@@ -198,4 +281,5 @@ module.exports = {
   applyOpportunity,
   getOpportunityApplicants,
   updateApplicationStatus,
+  getApplications,
 };

@@ -36,13 +36,12 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await authService.login(email, password);
-      if (data.success) {
-        localStorage.setItem('token', data.token);
+      const responseObj = await authService.login(email, password);
+      if (responseObj.success && responseObj.data) {
+        localStorage.setItem('token', responseObj.data.token);
         // Exclude token from stored user object state
-        const { token, ...userData } = data;
-        // The endpoint returns userData format slightly differently, but we can standardise.
-        setUser(userData);
+        const { token, ...userDataWithoutToken } = responseObj.data;
+        setUser(userDataWithoutToken);
         return { success: true };
       }
     } catch (err) {
@@ -59,10 +58,10 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await authService.register(userData);
-      if (data.success) {
-        localStorage.setItem('token', data.token);
-        const { token, ...userDataWithoutToken } = data;
+      const responseObj = await authService.register(userData);
+      if (responseObj.success && responseObj.data) {
+        localStorage.setItem('token', responseObj.data.token);
+        const { token, ...userDataWithoutToken } = responseObj.data;
         setUser(userDataWithoutToken);
         return { success: true };
       }

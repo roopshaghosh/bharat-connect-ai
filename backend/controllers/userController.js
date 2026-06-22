@@ -23,10 +23,15 @@ const getUserProfile = async (req, res) => {
       icon: ub.badge.icon || '🏆'
     }));
 
+    const userData = user.toObject();
+    userData.name = userData.fullname;
+    if (userData.role === 'Volunteer') userData.role = 'user';
+    else if (userData.role === 'NGO') userData.role = 'organization';
+
     res.status(200).json({
       success: true,
       data: {
-        ...user.toObject(),
+        ...userData,
         badges: badgeList
       },
     });
@@ -54,9 +59,10 @@ const updateUserProfile = async (req, res) => {
     }
 
     // Updatable fields
-    const { fullname, location, bio, skills, interests, availability, bloodGroup } = req.body;
+    const { fullname, name, location, bio, skills, interests, availability, bloodGroup } = req.body;
 
-    if (fullname !== undefined) user.fullname = fullname;
+    const actualFullname = fullname !== undefined ? fullname : name;
+    if (actualFullname !== undefined) user.fullname = actualFullname;
     if (location !== undefined) user.location = location;
     if (bio !== undefined) user.bio = bio;
     if (availability !== undefined) user.availability = availability;
@@ -89,8 +95,9 @@ const updateUserProfile = async (req, res) => {
       data: {
         _id: updatedUser._id,
         fullname: updatedUser.fullname,
+        name: updatedUser.fullname,
         email: updatedUser.email,
-        role: updatedUser.role,
+        role: updatedUser.role === 'Volunteer' ? 'user' : 'organization',
         location: updatedUser.location,
         bloodGroup: updatedUser.bloodGroup,
         avatar: updatedUser.avatar,

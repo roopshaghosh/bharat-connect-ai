@@ -69,8 +69,10 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 
 app.use("/api/opportunities", opportunityRoutes);
+app.use("/api/volunteer/opportunities", opportunityRoutes);
 
 app.use("/api/applications", applicationRoutes);
+app.use("/api/volunteer/applications", applicationRoutes);
 
 app.use("/api/blood", bloodRoutes);
 

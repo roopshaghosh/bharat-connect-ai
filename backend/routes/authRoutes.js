@@ -6,6 +6,7 @@ const {
   getMe,
   getImpactStats,
 } = require('../controllers/authController');
+const { updateUserProfile } = require('../controllers/userController');
 const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -18,5 +19,6 @@ router.post('/google', googleLogin);
 // Protected routes
 router.get('/me', protect, getMe);
 router.get('/impact', protect, getImpactStats);
+router.put('/profile', protect, updateUserProfile);
 
 module.exports = router;

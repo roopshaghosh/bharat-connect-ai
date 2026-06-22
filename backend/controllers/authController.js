@@ -24,7 +24,7 @@ const generateToken = (id) => {
 // @access  Public
 const register = async (req, res) => {
   try {
-    const { fullname, email, password, role, location, bloodGroup } = req.body;
+    const { fullname, name, email, password, role, location, bloodGroup } = req.body;
 
     // Check if user exists
     const userExists = await User.findOne({ email });
@@ -35,12 +35,17 @@ const register = async (req, res) => {
       });
     }
 
+    // Map frontend 'user'/'organization' to backend 'Volunteer'/'NGO'
+    let mappedRole = role;
+    if (role === 'user' || role === 'volunteer') mappedRole = 'Volunteer';
+    if (role === 'organization' || role === 'ngo') mappedRole = 'NGO';
+
     // Create user
     const user = await User.create({
-      fullname,
+      fullname: fullname || name,
       email,
       password,
-      role,
+      role: mappedRole,
       location,
       bloodGroup,
     });
@@ -51,10 +56,18 @@ const register = async (req, res) => {
         data: {
           _id: user._id,
           fullname: user.fullname,
+          name: user.fullname,
           email: user.email,
-          role: user.role,
+          role: user.role === 'Volunteer' ? 'user' : 'organization',
           location: user.location,
           bloodGroup: user.bloodGroup,
+          isBloodDonor: user.isBloodDonor || false,
+          avatar: user.avatar || '',
+          bio: user.bio || '',
+          skills: user.skills || [],
+          interests: user.interests || [],
+          availability: user.availability || 'flexible',
+          impactScore: user.impactScore || 0,
           token: generateToken(user._id),
         },
       });
@@ -111,10 +124,18 @@ const login = async (req, res) => {
       data: {
         _id: user._id,
         fullname: user.fullname,
+        name: user.fullname,
         email: user.email,
-        role: user.role,
+        role: user.role === 'Volunteer' ? 'user' : 'organization',
         location: user.location,
         bloodGroup: user.bloodGroup,
+        isBloodDonor: user.isBloodDonor || false,
+        avatar: user.avatar || '',
+        bio: user.bio || '',
+        skills: user.skills || [],
+        interests: user.interests || [],
+        availability: user.availability || 'flexible',
+        impactScore: user.impactScore || 0,
         token: generateToken(user._id),
       },
     });
@@ -186,10 +207,15 @@ const googleLogin = async (req, res) => {
           });
         }
 
+        // Map frontend 'user'/'organization' to backend 'Volunteer'/'NGO'
+        let mappedRole = role;
+        if (role === 'user' || role === 'volunteer') mappedRole = 'Volunteer';
+        if (role === 'organization' || role === 'ngo') mappedRole = 'NGO';
+
         user = await User.create({
           fullname,
           email,
-          role,
+          role: mappedRole,
           location,
           bloodGroup,
           googleId,
@@ -203,11 +229,18 @@ const googleLogin = async (req, res) => {
       data: {
         _id: user._id,
         fullname: user.fullname,
+        name: user.fullname,
         email: user.email,
-        role: user.role,
+        role: user.role === 'Volunteer' ? 'user' : 'organization',
         location: user.location,
         bloodGroup: user.bloodGroup,
-        avatar: user.avatar,
+        isBloodDonor: user.isBloodDonor || false,
+        avatar: user.avatar || '',
+        bio: user.bio || '',
+        skills: user.skills || [],
+        interests: user.interests || [],
+        availability: user.availability || 'flexible',
+        impactScore: user.impactScore || 0,
         token: generateToken(user._id),
       },
     });
@@ -235,10 +268,15 @@ const getMe = async (req, res) => {
       icon: ub.badge.icon || '🏆'
     }));
 
+    const userData = user.toObject();
+    userData.name = userData.fullname;
+    if (userData.role === 'Volunteer') userData.role = 'user';
+    else if (userData.role === 'NGO') userData.role = 'organization';
+
     res.status(200).json({
       success: true,
       data: {
-        ...user.toObject(),
+        ...userData,
         badges: badgeList
       },
     });
