@@ -42,10 +42,14 @@ const applyOpportunity = async (req, res) => {
       });
     }
 
+    const { message, skillsOffered } = req.body || {};
+
     // Create application
     const application = await Application.create({
       opportunity: opportunityId,
       applicant: req.user.id,
+      message: message || '',
+      skillsOffered: skillsOffered || [],
       status: 'pending',
     });
 

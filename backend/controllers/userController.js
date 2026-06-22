@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const UserBadge = require('../models/UserBadge');
+const BloodDonor = require('../models/BloodDonor');
 
 // @desc    Get current user profile
 // @route   GET /api/users/profile
@@ -59,7 +60,7 @@ const updateUserProfile = async (req, res) => {
     }
 
     // Updatable fields
-    const { fullname, name, location, bio, skills, interests, availability, bloodGroup } = req.body;
+    const { fullname, name, location, bio, skills, interests, availability, bloodGroup, isBloodDonor } = req.body;
 
     const actualFullname = fullname !== undefined ? fullname : name;
     if (actualFullname !== undefined) user.fullname = actualFullname;
@@ -67,6 +68,7 @@ const updateUserProfile = async (req, res) => {
     if (bio !== undefined) user.bio = bio;
     if (availability !== undefined) user.availability = availability;
     if (bloodGroup !== undefined) user.bloodGroup = bloodGroup;
+    if (isBloodDonor !== undefined) user.isBloodDonor = isBloodDonor;
 
     // Handle skills and interests arrays
     if (skills !== undefined) {
@@ -81,6 +83,30 @@ const updateUserProfile = async (req, res) => {
     }
 
     const updatedUser = await user.save();
+
+    // Sync with BloodDonor model if user is a volunteer
+    if (updatedUser.role === 'Volunteer') {
+      const donorCity = location || updatedUser.location || 'Unknown';
+      const donorBloodGroup = bloodGroup || updatedUser.bloodGroup || 'Unknown';
+      const donorAvailable = isBloodDonor !== undefined ? isBloodDonor : updatedUser.isBloodDonor;
+
+      if (donorBloodGroup !== 'Unknown') {
+        let donor = await BloodDonor.findOne({ user: updatedUser._id });
+        if (donor) {
+          donor.bloodGroup = donorBloodGroup;
+          donor.city = donorCity;
+          donor.available = donorAvailable;
+          await donor.save();
+        } else {
+          await BloodDonor.create({
+            user: updatedUser._id,
+            bloodGroup: donorBloodGroup,
+            city: donorCity,
+            available: donorAvailable,
+          });
+        }
+      }
+    }
 
     // Fetch and populate user badges
     const userBadges = await UserBadge.find({ user: req.user.id }).populate('badge');

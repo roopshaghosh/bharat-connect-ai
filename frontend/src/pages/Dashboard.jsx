@@ -314,7 +314,7 @@ const Dashboard = () => {
                       <td className="py-4 px-4 text-slate-300 font-medium shrink-0">
                         <span className="flex items-center">
                           <Calendar className="w-3.5 h-3.5 mr-1 text-slate-500" />
-                          {new Date(app.opportunity?.date || app.appliedAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}
+                          {new Date(app.appliedAt || app.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}
                         </span>
                       </td>
 

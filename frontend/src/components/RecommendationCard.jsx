@@ -3,7 +3,7 @@ import { Sparkles, ArrowRight, BrainCircuit, Heart, Handshake } from 'lucide-rea
 
 const RecommendationCard = ({ recommendation, opportunity, bloodRequest, onView }) => {
   const isVol = !!opportunity;
-  const matchScore = recommendation.matchScore || 50;
+  const matchScore = recommendation.matchPercentage || recommendation.matchScore || 50;
 
   // Color match score
   const getScoreColor = (score) => {
@@ -65,7 +65,7 @@ const RecommendationCard = ({ recommendation, opportunity, bloodRequest, onView 
             <Sparkles className="w-3 h-3 mr-1" /> Match Logic Reason
           </p>
           <p className="text-slate-300 text-xs leading-relaxed italic">
-            "{recommendation.matchReason}"
+            "{recommendation.reason || recommendation.matchReason || ""}"
           </p>
         </div>
       </div>

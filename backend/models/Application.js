@@ -20,6 +20,14 @@ const applicationSchema = new mongoose.Schema(
       },
       default: 'pending',
     },
+    message: {
+      type: String,
+      default: '',
+    },
+    skillsOffered: {
+      type: [String],
+      default: [],
+    },
     appliedAt: {
       type: Date,
       default: Date.now,
