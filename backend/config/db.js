@@ -11,7 +11,8 @@ const connectDB = async () => {
     console.log("MongoDB Connected Successfully");
   } catch (error) {
     console.error(`Failed to connect to MongoDB: ${error.message}`);
-    process.exit(1);
+    // Removed process.exit(1) so the server stays alive even if DB fails
+    // This allows us to see actual API errors instead of Render 503s
   }
 };
 
