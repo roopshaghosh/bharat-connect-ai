@@ -97,18 +97,21 @@ export const AuthProvider = ({ children }) => {
       const responseObj = await authService.login(email, password);
       if (responseObj.success && responseObj.data) {
         localStorage.setItem('token', responseObj.data.token);
-        // Exclude token from stored user object state
         const { token, ...userDataWithoutToken } = responseObj.data;
         setUser(userDataWithoutToken);
+        setLoading(false);
         return { success: true };
+      } else {
+        const errMsg = responseObj.message || 'Login failed. Please check credentials.';
+        setError(errMsg);
+        setLoading(false);
+        return { success: false, message: errMsg };
       }
     } catch (err) {
       const errMsg = err.response?.data?.message || 'Login failed. Please check credentials.';
       setError(errMsg);
       setLoading(false);
       return { success: false, message: errMsg };
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -121,15 +124,19 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('token', responseObj.data.token);
         const { token, ...userDataWithoutToken } = responseObj.data;
         setUser(userDataWithoutToken);
+        setLoading(false);
         return { success: true };
+      } else {
+        const errMsg = responseObj.message || 'Registration failed.';
+        setError(errMsg);
+        setLoading(false);
+        return { success: false, message: errMsg };
       }
     } catch (err) {
       const errMsg = err.response?.data?.message || 'Registration failed.';
       setError(errMsg);
       setLoading(false);
       return { success: false, message: errMsg };
-    } finally {
-      setLoading(false);
     }
   };
 
